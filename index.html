@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F7F1E8">
+  <meta name="robots" content="noindex, nofollow">
+  <title>A Little Book About You</title>
+  <meta name="description" content="A little book, written for one person.">
+
+  <link rel="icon" href="assets/icons/star.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- Shared star shape, reused everywhere with <use href="#star"> -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <symbol id="star" viewBox="0 0 24 24">
+      <path d="M12 0c.6 7 5 11.4 12 12-7 .6-11.4 5-12 12-.6-7-5-11.400-12-12 7-.6 11.400-5 12-12z"/>
+    </symbol>
+  </svg>
+
+  <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+  <div class="book">
+
+    <!-- ============ OPENING SCREEN ============ -->
+    <header class="cover" id="cover">
+      <div class="cover__sky" aria-hidden="true">
+        <svg class="star"><use href="#star"/></svg>
+        <svg class="star"><use href="#star"/></svg>
+        <svg class="star"><use href="#star"/></svg>
+        <svg class="star"><use href="#star"/></svg>
+        <svg class="star"><use href="#star"/></svg>
+      </div>
+
+      <div class="cover__inner">
+        <svg class="star cover__star" aria-hidden="true"><use href="#star"/></svg>
+        <h1 class="cover__title">A Little<br>Book About<br>You</h1>
+        <p class="cover__by">written by<br><span class="cover__name" data-bind="yourName">YOUR NAME</span></p>
+        <button class="open-btn" id="openBook" type="button">
+          <span class="open-btn__arrow" aria-hidden="true">↓</span>
+          <span>open me</span>
+        </button>
+      </div>
+      <p class="cover__foot">a first edition of one &middot; <span data-bind="birthday">October 10</span></p>
+    </header>
+
+    <!-- ============ THE STORY (revealed by "open me") ============ -->
+    <main id="story" hidden>
+
+      <!-- CHAPTER I -->
+      <section class="chapter chapter--one" id="ch1" aria-labelledby="ch1-title">
+        <header class="chapter__head reveal">
+          <p class="chapter__no">Chapter I</p>
+          <h2 class="chapter__title" id="ch1-title">Once Upon a Time</h2>
+        </header>
+        <p class="lede reveal" id="introLine"></p>
+        <p class="body reveal" id="introText"></p>
+        <div class="collage" id="introPhotos"></div>
+        <div class="ornament" aria-hidden="true">
+          <svg class="star"><use href="#star"/></svg><svg class="star"><use href="#star"/></svg><svg class="star"><use href="#star"/></svg>
+        </div>
+      </section>
+
+      <!-- CHAPTER II -->
+      <section class="chapter chapter--two" id="ch2" aria-labelledby="ch2-title">
+        <header class="chapter__head reveal">
+          <p class="chapter__no">Chapter II</p>
+          <h2 class="chapter__title" id="ch2-title">The Things That Make You, You</h2>
+        </header>
+        <p class="aside reveal">Six small things I kept between these pages. Pick one up.</p>
+        <div class="things" id="things"></div>
+      </section>
+
+      <!-- CHAPTER III -->
+      <section class="chapter chapter--three" id="ch3" aria-labelledby="ch3-title">
+        <header class="chapter__head reveal">
+          <p class="chapter__no">Chapter III</p>
+          <h2 class="chapter__title" id="ch3-title">Your Eras</h2>
+          <p class="chapter__sub">(your version)</p>
+        </header>
+        <p class="aside reveal">Swipe through them. Tap one to turn it over.</p>
+        <div class="eras reveal" id="eras" role="group" aria-label="Your eras"></div>
+        <div class="dots" id="eraDots" aria-hidden="true"></div>
+      </section>
+
+      <!-- CHAPTER IV -->
+      <section class="chapter chapter--four" id="ch4" aria-labelledby="ch4-title">
+        <header class="chapter__head reveal">
+          <p class="chapter__no">Chapter IV</p>
+          <h2 class="chapter__title" id="ch4-title">A Playlist for You</h2>
+        </header>
+
+        <div class="player reveal" id="player">
+          <p class="player__label">Now playing</p>
+          <div class="player__art" id="playerArt">
+            <div class="player__disc" aria-hidden="true"></div>
+            <div class="player__sleeve" id="playerSleeve">
+              <svg class="star" aria-hidden="true"><use href="#star"/></svg>
+            </div>
+          </div>
+          <h3 class="player__title" id="trackTitle"></h3>
+          <p class="player__artist" id="trackArtist"></p>
+          <p class="player__why" id="trackWhy"></p>
+
+          <input class="seek" id="seek" type="range" min="0" max="100" value="0" step="1" aria-label="Song position">
+          <div class="player__time"><span id="timeNow">0:00</span><span id="timeEnd">0:00</span></div>
+
+          <div class="player__controls">
+            <button type="button" class="ctrl" id="prevBtn" aria-label="Previous song">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 5v14l-10-7zM6 5h2v14H6z"/></svg>
+            </button>
+            <button type="button" class="ctrl ctrl--main" id="playBtn" aria-label="Play">
+              <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14l11-7z"/></svg>
+              <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg>
+            </button>
+            <button type="button" class="ctrl" id="nextBtn" aria-label="Next song">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5v14l10-7zM16 5h2v14h-2z"/></svg>
+            </button>
+            <button type="button" class="ctrl ctrl--mute" id="muteBtn" aria-label="Mute" aria-pressed="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9z"/><path class="i-wave" d="M16 8.500a5 5 0 010 7" fill="none" stroke="currentColor" stroke-width="1.600" stroke-linecap="round"/><path class="i-x" d="M16 9.500l5 5m0-5l-5 5" fill="none" stroke="currentColor" stroke-width="1.600" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+          <a class="player__link" id="trackLink" target="_blank" rel="noopener" hidden>listen to the real thing ↗</a>
+        </div>
+
+        <ol class="tracks reveal" id="tracks"></ol>
+      </section>
+
+      <!-- CHAPTER V -->
+      <section class="chapter chapter--five" id="ch5" aria-labelledby="ch5-title">
+        <header class="chapter__head reveal">
+          <p class="chapter__no">Chapter V</p>
+          <h2 class="chapter__title" id="ch5-title">Our Little Things</h2>
+        </header>
+        <p class="aside reveal">Loose photographs, tucked in where they fell.</p>
+        <div class="memories" id="memories"></div>
+
+        <!-- The middle star here is the secret. Shh. -->
+        <div class="ornament ornament--secret">
+          <svg class="star" aria-hidden="true"><use href="#star"/></svg>
+          <button type="button" class="secret-star" id="secretStar" aria-label="A small purple star">
+            <svg class="star" aria-hidden="true"><use href="#star"/></svg>
+          </button>
+          <svg class="star" aria-hidden="true"><use href="#star"/></svg>
+        </div>
+      </section>
+
+      <!-- CHAPTER VI -->
+      <section class="chapter chapter--six" id="ch6" aria-labelledby="ch6-title">
+        <header class="chapter__head reveal">
+          <p class="chapter__no">Chapter VI</p>
+          <h2 class="chapter__title" id="ch6-title">Things I Never Say Enough</h2>
+        </header>
+        <div class="lines" id="lines"></div>
+      </section>
+
+      <!-- EPILOGUE -->
+      <section class="chapter chapter--epilogue" id="epilogue" aria-labelledby="epi-title">
+        <div class="epi">
+          <h2 class="chapter__no reveal" id="epi-title">Epilogue</h2>
+          <p class="epi__line reveal">Every good story has a next chapter.</p>
+          <p class="epi__line reveal">And I hope I get to be there for yours.</p>
+          <p class="epi__line epi__line--big reveal">Happy Birthday, <span data-bind="herName">HER NAME</span>. <span class="heart" aria-hidden="true">❤️</span></p>
+          <p class="epi__line epi__line--quiet reveal">The story isn't finished yet.</p>
+          <button class="turn-btn reveal" id="turnPage" type="button">Turn the page <span aria-hidden="true">→</span></button>
+        </div>
+      </section>
+
+      <!-- FINAL PAGE (revealed by "Turn the page") -->
+      <section class="chapter chapter--final" id="final" aria-labelledby="final-title" hidden>
+        <div class="final">
+          <p class="chapter__no" id="final-title" tabindex="-1">Chapter <span data-bind="age">25</span></p>
+          <h2 class="final__title">To be written&hellip;</h2>
+          <p class="final__msg" id="finalMessage"></p>
+          <svg class="star final__star" aria-hidden="true"><use href="#star"/></svg>
+          <p class="final__hb">Happy Birthday, <span data-bind="herName">HER NAME</span>.</p>
+          <p class="final__last">Let's write the rest.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- A slip of paper that slides up for notes and the secret -->
+  <dialog class="note" id="note" aria-labelledby="noteKicker">
+    <div class="note__paper">
+      <button type="button" class="note__close" id="noteClose" aria-label="Close">&times;</button>
+      <p class="note__kicker" id="noteKicker"></p>
+      <p class="note__first" id="noteFirst"></p>
+      <div class="note__photo" id="notePhoto" hidden></div>
+      <p class="note__then" id="noteThen"></p>
+      <p class="note__sign" id="noteSign"></p>
+    </div>
+  </dialog>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
