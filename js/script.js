@@ -350,7 +350,7 @@ const CONFIG = {
   const Music = (function initBackgroundMusic() {
     const cfg = CONFIG.backgroundMusic || {};
     const btn = $("bgmBtn");
-    const off = { hold() {}, paused() {}, release() {} };
+    const off = { start() {}, hold() {}, paused() {}, release() {} };
     if (!cfg.file) return off;
 
     const volume = Math.min(1, Math.max(0, cfg.volume == null ? 0.18 : cfg.volume));
@@ -363,35 +363,35 @@ const CONFIG = {
     let held = false;       // the playlist has the floor
     let songPlaying = false;
     let broken = false;     // file missing or unplayable
-    let gain = null;
 
-    // iOS ignores audio.volume, so there the level is set with a gain node instead.
-    function quietOnIOS() {
-      if (gain || bgm.volume === volume || !/^https?:$/.test(location.protocol)) return;
-      const Ctx = window.AudioContext || window.webkitAudioContext;
-      if (!Ctx) return;
-      try {
-        const ctx = new Ctx();
-        gain = ctx.createGain();
-        gain.gain.value = volume;
-        ctx.createMediaElementSource(bgm).connect(gain).connect(ctx.destination);
-        if (ctx.state === "suspended") ctx.resume();
-        document.addEventListener("visibilitychange", () => { if (!document.hidden) ctx.resume(); });
-      } catch (e) { /* fall back to the element's own volume */ }
-    }
+    // `audible` is only true once the browser reports real playback,
+    // so the indicator never claims music that isn't there.
+    let audible = false;
 
     function draw() {
-      btn.classList.toggle("is-on", !bgm.paused);
+      btn.classList.toggle("is-on", audible && !bgm.paused);
       btn.classList.toggle("is-muted", userMuted);
       btn.setAttribute("aria-pressed", String(userMuted));
       btn.setAttribute("aria-label", (bgm.paused ? "Play" : "Mute") + " background music");
     }
 
+    // Must be called synchronously from a tap/click handler on iOS:
+    // no timers, promises or animation callbacks between the tap and play().
     function start() {
       if (broken || userMuted || held || !bgm.paused) return;
-      quietOnIOS();
-      bgm.play().catch((err) => {
-        // Autoplay blocked: wait quietly for her first tap or key press.
+      bgm.muted = false;
+      bgm.volume = volume; // iOS ignores this and uses the phone's own volume
+      const attempt = bgm.play();
+      if (!attempt || !attempt.then) return;
+      attempt.then(() => {
+        audible = !bgm.paused;
+        draw();
+      }).catch((err) => {
+        audible = false;
+        draw();
+        if (err && err.name === "AbortError") return; // paused again before it began
+        console.error("Background music failed to start:", err);
+        // Autoplay blocked: wait quietly for her next tap or key press.
         if (err && err.name === "NotAllowedError") waitForGesture();
       });
     }
@@ -400,7 +400,7 @@ const CONFIG = {
     function waitForGesture() {
       if (waiting) return;
       waiting = true;
-      const events = ["pointerdown", "touchend", "click", "keydown"];
+      const events = ["touchend", "click", "keydown"];
       const go = () => {
         waiting = false;
         events.forEach((name) => document.removeEventListener(name, go, true));
@@ -409,9 +409,9 @@ const CONFIG = {
       events.forEach((name) => document.addEventListener(name, go, true));
     }
 
-    bgm.addEventListener("play", draw);
-    bgm.addEventListener("pause", draw);
-    bgm.addEventListener("error", () => { broken = true; btn.hidden = true; });
+    bgm.addEventListener("playing", () => { audible = true; draw(); });
+    bgm.addEventListener("pause", () => { audible = false; draw(); });
+    bgm.addEventListener("error", () => { broken = true; audible = false; btn.hidden = true; });
 
     btn.hidden = false;
     btn.addEventListener("click", () => {
@@ -432,6 +432,7 @@ const CONFIG = {
     start(); // best-effort autoplay on load
 
     return {
+      start,
       hold() { held = true; songPlaying = true; bgm.pause(); },
       paused() { songPlaying = false; },               // song paused: stay quiet
       release() { held = false; songPlaying = false; start(); },
@@ -669,6 +670,9 @@ const CONFIG = {
   /* ---------- Opening the book ---------- */
   const story = $("story");
   $("openBook").addEventListener("click", () => {
+    // First thing in the tap itself, so iPhone/iPad Safari accepts it.
+    Music.start();
+
     story.hidden = false;
     doc.classList.add("is-open");
     setTimeout(() => {
