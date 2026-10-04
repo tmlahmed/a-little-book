@@ -22,8 +22,8 @@ const CONFIG = {
     text: "It started with an Instagram story about Prison Break. A reply, a conversation, and then somehow, years later, I was picking you up from Mirpur DOHS and taking you to North End. I remember thinking you were gorgeous, but what stayed with me even more was the way you talked and the way you saw things.",
     photos: [
       { src: "assets/photos/bristy_intro_1.jpg", alt: "A picture of Bristy" },
-      { src: "assets/photos/intro-02.jpg", alt: "A memory of us" },
-      { src: "assets/photos/intro-03.jpg", alt: "One of my favorite pictures of you" },
+      { src: "assets/photos/bristy_intro_2.jpg", alt: "A memory of us" },
+      { src: "assets/photos/bristy_intro_3.jpg", alt: "One of my favorite pictures of you" },
     ],
   },
 
