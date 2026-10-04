@@ -1185,3 +1185,24 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
     var(--paper-2);
 }
 .final__star { color: var(--pink-dusty); }
+
+/* =========================================================
+   PLAYLIST ATMOSPHERE
+   Two soft glows in colours read from the current song's
+   artwork (set from script.js as --album-1 / --album-2).
+   They sit over the chapter's own burgundy and cross-fade
+   when the song changes.
+   ========================================================= */
+.ambience {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1.8s ease;
+  background:
+    radial-gradient(circle at 16% 14%, var(--album-1, transparent), transparent 55%),
+    radial-gradient(circle at 86% 78%, var(--album-2, transparent), transparent 60%);
+}
+.ambience.on { opacity: 1; }
+.chapter--four > :not(.ambience) { position: relative; z-index: 1; }

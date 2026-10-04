@@ -448,6 +448,93 @@ const CONFIG = {
     const seek = $("seek");
     const sleeve = $("playerSleeve");
     const list = $("tracks");
+    /* The chapter's atmosphere follows the current song's artwork: two muted
+       colours are read from the image (once per image, then cached) and
+       cross-faded in as soft glows over the chapter's own background. */
+    const palettes = new Map();   // art src -> Promise<[colour, colour] | null>
+    const layers = [0, 1].map(() => {
+      const layer = el("div", "ambience");
+      layer.setAttribute("aria-hidden", "true");
+      $("ch4").prepend(layer);
+      return layer;
+    });
+    let frontLayer = 0, shownArt = null;
+
+    function toHsl(r, g, b) {
+      r /= 255; g /= 255; b /= 255;
+      const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+      if (!d) return [0, 0, l];
+      const sat = d / (l > 0.5 ? 2 - max - min : max + min);
+      const h = max === r ? ((g - b) / d + (g < b ? 6 : 0)) : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+      return [h / 6, sat, l];
+    }
+
+    // Keep whatever the artwork gives us dusky and soft, so cream text stays readable.
+    function mute([r, g, b]) {
+      const [h, sat, l] = toHsl(r, g, b);
+      const s2 = Math.min(sat, 0.45), l2 = Math.min(0.36, Math.max(0.24, l));
+      return "hsla(" + Math.round(h * 360) + "," + Math.round(s2 * 100) + "%," + Math.round(l2 * 100) + "%,.5)";
+    }
+
+    function readPalette(src) {
+      if (!palettes.has(src)) {
+        palettes.set(src, new Promise((resolve) => {
+          const img = new Image();
+          img.decoding = "async";
+          img.onerror = () => resolve(null);
+          img.onload = () => {
+            try {
+              const size = 24;
+              const canvas = document.createElement("canvas");
+              canvas.width = canvas.height = size;
+              const ctx = canvas.getContext("2d", { willReadFrequently: true });
+              ctx.drawImage(img, 0, 0, size, size);
+              const px = ctx.getImageData(0, 0, size, size).data;
+
+              // Group pixels into 12 hue families, favouring the colourful ones.
+              const bins = Array.from({ length: 12 }, (_, i) => ({ i, w: 0, r: 0, g: 0, b: 0 }));
+              const all = { w: 0, r: 0, g: 0, b: 0 };
+              for (let i = 0; i < px.length; i += 4) {
+                const r = px[i], g = px[i + 1], b = px[i + 2];
+                const [h, sat] = toHsl(r, g, b);
+                const w = sat + 0.05;
+                [bins[Math.min(11, Math.floor(h * 12))], all].forEach((bin) => {
+                  bin.w += w; bin.r += r * w; bin.g += g * w; bin.b += b * w;
+                });
+              }
+              const avg = (bin) => [bin.r / bin.w, bin.g / bin.w, bin.b / bin.w];
+              bins.sort((a, b) => b.w - a.w);
+              const first = bins[0];
+              const far = (bin) => Math.min(Math.abs(bin.i - first.i), 12 - Math.abs(bin.i - first.i)) >= 2;
+              const second = bins.find((bin) => far(bin) && bin.w > first.w * 0.15) || all;
+              resolve([mute(avg(first)), mute(avg(second))]);
+            } catch (e) {
+              resolve(null); // e.g. opened straight from disk: the canvas can't be read
+            }
+          };
+          img.src = src;
+        }));
+      }
+      return palettes.get(src);
+    }
+
+    function setAmbience(src) {
+      if (src === shownArt) return;
+      shownArt = src;
+      const fadeOut = () => layers.forEach((layer) => layer.classList.remove("on"));
+      if (!src) return fadeOut();
+      readPalette(src).then((colours) => {
+        if (shownArt !== src) return;          // she has already moved on to another song
+        if (!colours) return fadeOut();        // no artwork: just the chapter's own colour
+        const next = layers[1 - frontLayer];
+        next.style.setProperty("--album-1", colours[0]);
+        next.style.setProperty("--album-2", colours[1]);
+        next.classList.add("on");
+        layers[frontLayer].classList.remove("on");
+        frontLayer = 1 - frontLayer;
+      });
+    }
+
     const SLEEVES = [["#5B4B73", "#1C1820"], ["#C8A96B", "#6E2638"], ["#6E2638", "#1C1820"], ["#1C1820", "#5B4B73"]];
 
     // Playlist songs are only ever started by a tap. No autoplay, no preloading.
@@ -498,6 +585,7 @@ const CONFIG = {
       sleeve.style.setProperty("--b", b);
       sleeve.querySelectorAll("img").forEach((img) => img.remove());
       if (song.art) addImage(sleeve, song.art, "Cover art for " + song.title);
+      setAmbience(song.art);
 
       [...list.children].forEach((li, i) => {
         const btn = li.firstChild;
