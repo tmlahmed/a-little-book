@@ -12,7 +12,7 @@
 
 
 const CONFIG = {
-  herName: "BRISTY",
+  herName: "LOVE",
   yourName: "TAMAL",
   birthday: "October 5",
   age: 24,
