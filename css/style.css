@@ -18,6 +18,11 @@
   --gold: #C8A96B;
   --gold-deep: #7A5C24;   /* gold dark enough to read as text on paper */
 
+  /* her favourite colour — used sparingly, as small details only */
+  --pink-soft: #E8A0B8;
+  --pink-dusty: #C97892;
+  --pink-pale: #F8E8ED;
+
   --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
   --sans: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --hand: "Caveat", "Bradley Hand", cursive;
@@ -1095,3 +1100,88 @@ button { font: inherit; color: inherit; background: none; border: 0; padding: 0;
   .js .line.seen { opacity: 1; }
   .is-playing .player__disc { transform: translateX(26%); }
 }
+
+/* =========================================================
+   LITTLE PIECES OF PINK
+   Her favourite colour, left in small places. Accents only —
+   delete this whole block to return to the original palette.
+   ========================================================= */
+::selection { background: rgba(232, 160, 184, .45); }
+
+/* reading progress warms to pink at its tip */
+.progress span { background: linear-gradient(90deg, var(--gold) 60%, var(--pink-soft)); }
+
+/* one of the cover's stars */
+.cover__sky .star:nth-child(3) { color: var(--pink-dusty); font-size: 8px; }
+
+/* a short underline draws in beneath each chapter title as it arrives */
+.chapter__head { position: relative; }
+.chapter__head::after {
+  content: "";
+  position: absolute;
+  left: 50%; bottom: -20px;
+  width: 34px; height: 1.5px;
+  margin-left: -17px;
+  background: var(--pink-dusty);
+  transition: transform 1s var(--ease) .5s;
+}
+.chapter--four .chapter__head::after,
+.chapter--six .chapter__head::after { background: var(--pink-soft); }
+.js .chapter__head::after { transform: scaleX(0); }
+.js .chapter__head.in::after { transform: scaleX(1); }
+
+/* the middle star of the ornament */
+.ornament > .star:nth-child(2) { color: var(--pink-dusty); }
+
+/* keepsakes: the "read" mark, and the pale cards blush once opened */
+.thing { transition: background-color .8s ease; }
+.thing__mark { color: var(--pink-soft); }
+.thing:nth-child(6n+1) .thing__mark,
+.thing:nth-child(6n+2) .thing__mark,
+.thing:nth-child(6n+4) .thing__mark { color: var(--pink-dusty); }
+.thing.is-read:nth-child(6n+1),
+.thing.is-read:nth-child(6n+4) { --tint: var(--pink-pale); }
+
+/* eras: one cover, the page dots, the rule above each memory */
+.era:nth-child(6n+5) { --bg: var(--pink-pale); --ac: var(--pink-dusty); }
+.dots span.on { background: var(--pink-dusty); }
+.era__memory { border-top-color: rgba(201, 120, 146, .45); }
+
+/* the player: progress, the selected song, a soft halo while it plays */
+.seek::-webkit-slider-runnable-track {
+  background: linear-gradient(to right, var(--pink-soft) var(--p, 0%), rgba(247, 241, 232, .25) var(--p, 0%));
+}
+.seek::-webkit-slider-thumb { background: var(--pink-soft); }
+.seek::-moz-range-progress { background: var(--pink-soft); }
+.seek::-moz-range-thumb { background: var(--pink-soft); }
+.track[aria-current="true"] .track__title { color: var(--pink-soft); }
+.track[aria-current="true"] .track__n { color: var(--pink-soft); }
+.ctrl--main { transition: transform .2s var(--ease), background .3s, box-shadow .6s ease; }
+.is-playing .ctrl--main { box-shadow: 0 0 0 6px rgba(232, 160, 184, .16), 0 0 26px rgba(232, 160, 184, .35); }
+
+/* the background-music indicator */
+.bgm { border-color: rgba(232, 160, 184, .45); transition: opacity .4s, transform .2s var(--ease), box-shadow .6s ease; }
+.bgm.is-on { color: var(--pink-soft); box-shadow: 0 0 16px rgba(232, 160, 184, .4); }
+
+/* a strip of pink tape on every third photograph */
+.memory:nth-child(3n) .polaroid::before { background: rgba(232, 160, 184, .55); }
+
+/* the last thing I never say enough */
+.line:last-child { color: var(--pink-soft); }
+
+/* her name, underlined the way you'd mark a favourite sentence */
+.epi__line--big [data-bind="herName"],
+.final__hb [data-bind="herName"] {
+  background: linear-gradient(transparent 64%, rgba(232, 160, 184, .4) 64%, rgba(232, 160, 184, .4) 92%, transparent 92%);
+  padding: 0 .08em;
+}
+.turn-btn span { color: var(--pink-dusty); }
+.turn-btn:hover span, .turn-btn:focus-visible span { color: var(--pink-soft); }
+
+/* the final page */
+.chapter--final {
+  background:
+    radial-gradient(80% 36% at 50% 100%, rgba(232, 160, 184, .22), transparent 75%),
+    var(--paper-2);
+}
+.final__star { color: var(--pink-dusty); }
