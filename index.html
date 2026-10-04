@@ -6,7 +6,24 @@
   <meta name="theme-color" content="#F7F1E8">
   <meta name="robots" content="noindex, nofollow">
   <title>A Little Book About You</title>
-  <meta name="description" content="A little book, written for one person.">
+  <meta name="description" content="A little book about you, made with love.">
+
+  <!-- Link preview (Messenger, WhatsApp, iMessage, Discord, X…).
+       These URLs must be absolute — change them if the site moves. -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="A Little Book About You">
+  <meta property="og:title" content="Happy Birthday, Bristy ♡">
+  <meta property="og:description" content="A little book about you, made with love.">
+  <meta property="og:url" content="https://tmlahmed.github.io/a-little-book/">
+  <meta property="og:image" content="https://tmlahmed.github.io/a-little-book/assets/photos/share-preview.jpg">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Happy Birthday, Bristy — a little book about you">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Happy Birthday, Bristy ♡">
+  <meta name="twitter:description" content="A little book about you, made with love.">
+  <meta name="twitter:image" content="https://tmlahmed.github.io/a-little-book/assets/photos/share-preview.jpg">
 
   <link rel="icon" href="assets/icons/star.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,6 +41,11 @@
   </svg>
 
   <div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+  <!-- Background music indicator / mute (shown only if CONFIG.backgroundMusic.file is set) -->
+  <button type="button" class="bgm" id="bgmBtn" aria-label="Mute background music" aria-pressed="false" hidden>
+    <span class="bgm__bars" aria-hidden="true"><i></i><i></i><i></i></span>
+  </button>
 
   <div class="book">
 

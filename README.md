@@ -45,6 +45,14 @@ Nothing ever autoplays. If `assets/music/song-01.mp3` (etc.) exists, tapping pla
 
 > A public GitHub Pages site is visible to anyone with the link, so don't upload commercial songs you don't have the rights to share. Use the `link` field instead.
 
+### Background music
+
+Put a soft track at `assets/music/background.mp3` (or change `CONFIG.backgroundMusic.file`). It loops quietly (`volume: 0.18`), starts on load where the browser allows it and otherwise on her first tap, and steps aside whenever a playlist song is playing. The small round button in the bottom-right corner mutes it. If the file is missing, the button simply doesn't appear. Set `file: ""` to turn it off.
+
+### Link preview
+
+The `og:` / `twitter:` tags in `index.html` control what Messenger, WhatsApp, iMessage etc. show when the link is shared. They use absolute URLs (`https://tmlahmed.github.io/a-little-book/`), so update them if the address changes. The image is `assets/photos/share-preview.jpg` (1200 × 630).
+
 ### The secret
 
 The middle star of the little ornament at the end of Chapter V is purple and gently pulses. Tapping it opens the secret page.

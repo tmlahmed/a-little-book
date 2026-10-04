@@ -17,6 +17,14 @@ const CONFIG = {
   birthday: "October 5",
   age: 24,
 
+  /* Soft music behind the whole book. Starts on load where the browser
+     allows it, otherwise on her first tap. Pauses for playlist songs.
+     Set file to "" to turn it off. volume: 0 – 1. */
+  backgroundMusic: {
+    file: "assets/music/background.mp3",
+    volume: 0.18,
+  },
+
   intro: {
     line: "The girl who somehow became my favorite person.",
     text: "It started with an Instagram story about Prison Break. A reply, a conversation, and then somehow, years later, I was picking you up from Mirpur DOHS and taking you to North End. I remember thinking you were gorgeous, but what stayed with me even more was the way you talked and the way you saw things.",
@@ -335,6 +343,101 @@ const CONFIG = {
     });
   }, { passive: true });
 
+  /* ---------- Background music ----------
+     One persistent audio element for the whole book. It never plays at the
+     same time as a playlist song: the player calls hold() before it starts
+     a song and release() when a song finishes. */
+  const Music = (function initBackgroundMusic() {
+    const cfg = CONFIG.backgroundMusic || {};
+    const btn = $("bgmBtn");
+    const off = { hold() {}, paused() {}, release() {} };
+    if (!cfg.file) return off;
+
+    const volume = Math.min(1, Math.max(0, cfg.volume == null ? 0.18 : cfg.volume));
+    const bgm = new Audio(cfg.file);
+    bgm.loop = true;
+    bgm.preload = "auto";
+    bgm.volume = volume;
+
+    let userMuted = false;  // she tapped the control to silence it
+    let held = false;       // the playlist has the floor
+    let songPlaying = false;
+    let broken = false;     // file missing or unplayable
+    let gain = null;
+
+    // iOS ignores audio.volume, so there the level is set with a gain node instead.
+    function quietOnIOS() {
+      if (gain || bgm.volume === volume || !/^https?:$/.test(location.protocol)) return;
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      try {
+        const ctx = new Ctx();
+        gain = ctx.createGain();
+        gain.gain.value = volume;
+        ctx.createMediaElementSource(bgm).connect(gain).connect(ctx.destination);
+        if (ctx.state === "suspended") ctx.resume();
+        document.addEventListener("visibilitychange", () => { if (!document.hidden) ctx.resume(); });
+      } catch (e) { /* fall back to the element's own volume */ }
+    }
+
+    function draw() {
+      btn.classList.toggle("is-on", !bgm.paused);
+      btn.classList.toggle("is-muted", userMuted);
+      btn.setAttribute("aria-pressed", String(userMuted));
+      btn.setAttribute("aria-label", (bgm.paused ? "Play" : "Mute") + " background music");
+    }
+
+    function start() {
+      if (broken || userMuted || held || !bgm.paused) return;
+      quietOnIOS();
+      bgm.play().catch((err) => {
+        // Autoplay blocked: wait quietly for her first tap or key press.
+        if (err && err.name === "NotAllowedError") waitForGesture();
+      });
+    }
+
+    let waiting = false;
+    function waitForGesture() {
+      if (waiting) return;
+      waiting = true;
+      const events = ["pointerdown", "touchend", "click", "keydown"];
+      const go = () => {
+        waiting = false;
+        events.forEach((name) => document.removeEventListener(name, go, true));
+        start();
+      };
+      events.forEach((name) => document.addEventListener(name, go, true));
+    }
+
+    bgm.addEventListener("play", draw);
+    bgm.addEventListener("pause", draw);
+    bgm.addEventListener("error", () => { broken = true; btn.hidden = true; });
+
+    btn.hidden = false;
+    btn.addEventListener("click", () => {
+      if (!bgm.paused) { userMuted = true; bgm.pause(); }
+      else if (songPlaying) userMuted = !userMuted;   // only a preference while a song plays
+      else { userMuted = false; held = false; start(); }
+      draw();
+    });
+
+    // Don't keep playing behind a locked phone or another tab.
+    let wasPlaying = false;
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) { wasPlaying = !bgm.paused; bgm.pause(); }
+      else if (wasPlaying) start();
+    });
+
+    draw();
+    start(); // best-effort autoplay on load
+
+    return {
+      hold() { held = true; songPlaying = true; bgm.pause(); },
+      paused() { songPlaying = false; },               // song paused: stay quiet
+      release() { held = false; songPlaying = false; start(); },
+    };
+  })();
+
   /* ---------- Chapter IV — the player ---------- */
   (function initPlayer() {
     const songs = CONFIG.songs;
@@ -346,7 +449,7 @@ const CONFIG = {
     const list = $("tracks");
     const SLEEVES = [["#5B4B73", "#1C1820"], ["#C8A96B", "#6E2638"], ["#6E2638", "#1C1820"], ["#1C1820", "#5B4B73"]];
 
-    // Audio is only ever started by a tap. No autoplay, no preloading.
+    // Playlist songs are only ever started by a tap. No autoplay, no preloading.
     const audio = new Audio();
     audio.preload = "none";
 
@@ -417,13 +520,14 @@ const CONFIG = {
       clearInterval(timer);
       timer = setInterval(() => {
         time += 0.5;
-        if (time >= duration) { pause(); time = 0; }
+        if (time >= duration) return finished();
         drawTime();
       }, 500);
       setPlaying(true);
     }
 
     function play() {
+      Music.hold(); // the song is the only thing playing
       if (silent) return startSilent();
       const wanted = index;
       audio.play().then(() => setPlaying(true)).catch((err) => {
@@ -436,6 +540,15 @@ const CONFIG = {
       clearInterval(timer);
       audio.pause();
       setPlaying(false);
+      Music.paused();
+    }
+
+    // A song ran to its end: hand the room back to the background music.
+    function finished() {
+      pause();
+      time = 0;
+      drawTime();
+      Music.release();
     }
 
     function select(i, andPlay) {
@@ -457,7 +570,7 @@ const CONFIG = {
       if (isFinite(audio.duration)) duration = audio.duration;
       drawTime();
     });
-    audio.addEventListener("ended", () => { pause(); time = 0; drawTime(); });
+    audio.addEventListener("ended", finished);
 
     $("playBtn").addEventListener("click", () => (playing ? pause() : play()));
     $("prevBtn").addEventListener("click", () => select(index - 1, playing));
